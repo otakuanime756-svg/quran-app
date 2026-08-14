@@ -27,15 +27,39 @@ jobs:
       - name: Show Flutter version
         run: flutter --version
 
-      - name: Remove old incorrectly named Dart files
+      - name: Clean old project files
         shell: bash
         run: |
-          find . -type f -name 'lib__*.dart' -print -delete
+          echo "=== BEFORE CLEANUP ==="
+          echo "Old flattened files:"
+          find . -type f -name 'lib__*.dart' -print || true
+
+          echo "Nested lib directory:"
+          if [ -d "lib/lib" ]; then
+            find lib/lib -type f -print
+          else
+            echo "No nested lib/lib directory"
+          fi
+
+          echo "=== CLEANING ==="
+
+          # Remove incorrectly flattened Dart files.
+          find . -type f -name 'lib__*.dart' -delete
+
+          # Remove duplicated nested lib directory.
+          rm -rf lib/lib
+
+          echo "=== AFTER CLEANUP ==="
+          echo "Remaining flattened files:"
+          find . -type f -name 'lib__*.dart' -print || true
+
+          echo "Correct lib structure:"
+          find lib -maxdepth 4 -type f -print | sort
 
       - name: Create Android platform
         run: flutter create --platforms=android .
 
-      - name: Install dependencies
+      - name: Get dependencies
         run: flutter pub get
 
       - name: Analyze project
